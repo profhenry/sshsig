@@ -9,7 +9,7 @@
 package de.profhenry.sshsig.core.engine;
 
 /**
- * @author jwiesner
+ * @author profhenry
  */
 public interface SigningEngine {
 

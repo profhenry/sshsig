@@ -82,8 +82,8 @@ public class SshSignatureGenerator {
 		tDataStream.writeInt(hashAlgorithm.getNameUsedInSshProtocol().length());
 		tDataStream.writeBytes(hashAlgorithm.getNameUsedInSshProtocol());
 
-		// singed content
-		tDataStream.writeInt(4 + 4 + tSigningResult.signatureAlgorithm.length() + tSigningResult.signedContent.length);
+		// signed content
+		tDataStream.writeInt(4 + tSigningResult.signatureAlgorithm.length() + 4 + tSigningResult.signedContent.length);
 		tDataStream.writeInt(tSigningResult.signatureAlgorithm.length());
 		tDataStream.writeBytes(tSigningResult.signatureAlgorithm);
 		tDataStream.writeInt(tSigningResult.signedContent.length);

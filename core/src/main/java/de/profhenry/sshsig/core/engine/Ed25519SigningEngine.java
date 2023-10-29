@@ -18,8 +18,6 @@ import java.security.SignatureException;
 import java.security.interfaces.EdECPrivateKey;
 import java.security.interfaces.EdECPublicKey;
 
-import de.profhenry.sshsig.core.engine.SigningEngine.SigningResult;
-
 /**
  * @author profhenry
  */

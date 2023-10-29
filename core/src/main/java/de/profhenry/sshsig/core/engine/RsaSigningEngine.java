@@ -19,7 +19,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 import de.profhenry.sshsig.core.SignatureAlgorithm;
-import de.profhenry.sshsig.core.engine.SigningEngine.SigningResult;
 
 /**
  * @author profhenry
