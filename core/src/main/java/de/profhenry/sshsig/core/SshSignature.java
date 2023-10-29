@@ -1,4 +1,4 @@
-package de.profhenry.sshsig;
+package de.profhenry.sshsig.core;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -25,8 +25,15 @@ public class SshSignature {
 
 	private final byte[] signatureData;
 
-	public SshSignature(byte[] someSignatureData) {
+	private final String signatureAlgorithm;
+
+	public SshSignature(byte[] someSignatureData, String aSignatureAlgorithm) {
 		signatureData = someSignatureData;
+		signatureAlgorithm = aSignatureAlgorithm;
+	}
+
+	public String getSignatureAlgorithm() {
+		return signatureAlgorithm;
 	}
 
 	private void write(Writer aWriter) {

@@ -1,4 +1,4 @@
-package de.profhenry.sshsig;
+package de.profhenry.sshsig.core;
 
 /**
  * @author profhenry

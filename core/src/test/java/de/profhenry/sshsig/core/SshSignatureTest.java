@@ -6,7 +6,7 @@
 // Berlin, Dusseldorf, Leipzig, Lisbon, Stuttgart (Germany)
 // All rights reserved.
 //
-package de.profhenry.sshsig;
+package de.profhenry.sshsig.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,9 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
+import java.security.interfaces.EdECPrivateKey;
+import java.security.interfaces.EdECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
@@ -31,26 +30,39 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
+import de.profhenry.sshsig.core.HashAlgorithm;
+import de.profhenry.sshsig.core.SignatureAlgorithm;
+import de.profhenry.sshsig.core.SshSignature;
+import de.profhenry.sshsig.core.SshSignatureGenerator;
+import de.profhenry.sshsig.core.engine.Ed25519SigningEngine;
+import de.profhenry.sshsig.core.engine.RsaSigningEngine;
+
 /**
  * @author profhenry
  */
 public class SshSignatureTest {
 
-	private static RSAPrivateKey privateKey;
+	private static RSAPrivateKey rsaPrivateKey;
 
-	private static RSAPublicKey publicKey;
+	private static RSAPublicKey rsaPublicKey;
+
+	private static EdECPrivateKey ed25519PrivateKey;
+
+	private static EdECPublicKey ed25519PublicKey;
 
 	@BeforeAll
 	static void setup() throws Exception {
-		privateKey = SshKeyUtil.readPrivateKey(new File("test_rsa"));
-		publicKey = SshKeyUtil.readPublicKey(new File("test_rsa.pub.pem"));
+		rsaPrivateKey = SshKeyUtil.readRsaPrivateKey(new File("../testkeys/test_rsa_pkcs8.der"));
+		rsaPublicKey = SshKeyUtil.readRsaPublicKey(new File("../testkeys/test_rsa.pub_x509.der"));
+
+		ed25519PrivateKey = SshKeyUtil.readEd25519PrivateKey(new File("../testkeys/test_ed25519_pkcs8.der"));
+		ed25519PublicKey = SshKeyUtil.readEd25519PublicKey(new File("../testkeys/test_ed25519.pub_x509.der"));
 	}
 
 	static class SshSignatureGeneratorProvider implements ArgumentsProvider {
 
 		@Override
 		public Stream<? extends Arguments> provideArguments(ExtensionContext aContext) throws Exception {
-			SshSignatureGenerator tSignatureGenerator = SshSignatureGenerator.create(privateKey, publicKey);
 
 			List<Arguments> tList = new ArrayList<>();
 
@@ -58,9 +70,21 @@ public class SshSignatureTest {
 				for (SignatureAlgorithm tSignatureAlgorithm : SignatureAlgorithm.values()) {
 					String tName = tHashAlgorithm + " + " + tSignatureAlgorithm;
 
-					tList.add(Arguments
-							.of(Named.of(tName, tSignatureGenerator.with(tHashAlgorithm).with(tSignatureAlgorithm))));
+					RsaSigningEngine tRsaSigningEngine =
+							new RsaSigningEngine(rsaPrivateKey, rsaPublicKey, tSignatureAlgorithm);
+					SshSignatureGenerator tSshSignatureGenerator =
+							SshSignatureGenerator.create(tRsaSigningEngine).withHashAlgorithm(tHashAlgorithm);
+
+					tList.add(Arguments.of(Named.of(tName, tSshSignatureGenerator)));
 				}
+
+				Ed25519SigningEngine tEd25519SigningEngine =
+						new Ed25519SigningEngine(ed25519PrivateKey, ed25519PublicKey);
+				String tName = tHashAlgorithm + " + ssh-ed25519";
+				SshSignatureGenerator tSshSignatureGenerator =
+						SshSignatureGenerator.create(tEd25519SigningEngine).withHashAlgorithm(tHashAlgorithm);
+
+				tList.add(Arguments.of(Named.of(tName, tSshSignatureGenerator)));
 			}
 
 			return tList.stream();
@@ -69,19 +93,17 @@ public class SshSignatureTest {
 
 	@ParameterizedTest
 	@ArgumentsSource(SshSignatureGeneratorProvider.class)
-	void testVerifyWithSshKeygen(SshSignatureGenerator aSignatureGenerator) throws InvalidKeyException,
-			NoSuchAlgorithmException, SignatureException, IOException, InterruptedException {
+	void testVerifyWithSshKeygen(SshSignatureGenerator aSignatureGenerator) throws Exception {
 
 		testSignature(aSignatureGenerator, "profhenry", "This is a test message!");
 	}
 
 	private void testSignature(SshSignatureGenerator aSignatureGenerator, String aNamespace, String aMessage)
-			throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, IOException,
-			InterruptedException {
+			throws Exception {
 		SshSignature tSshSignature = aSignatureGenerator.generateSignature(aNamespace, aMessage.getBytes());
 
 		String aSignatureFileName = "signature_" + aSignatureGenerator.getHashAlgorithm().getNameUsedInSshProtocol()
-				+ "_" + aSignatureGenerator.getSignatureAlgorithm().getNameUsedInSshProtocol() + ".sig";
+				+ "_" + tSshSignature.getSignatureAlgorithm() + ".sig";
 
 		tSshSignature.write(Path.of(aSignatureFileName));
 
@@ -95,9 +117,9 @@ public class SshSignatureTest {
 				"verify",
 				// "-vvv",
 				"-f",
-				"allowed_signers",
+				"../testkeys/allowed_signers",
 				"-I",
-				"test@sshsig@profhenry.de",
+				"test@sshsig.profhenry.de",
 				"-n",
 				aNamespace,
 				"-s",
