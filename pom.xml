@@ -9,32 +9,34 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<maven.compiler.target>17</maven.compiler.target>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.release>17</maven.compiler.release>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+
+		<version.slf4j>1.7.36</version.slf4j>
+		<version.junit>5.10.0</version.junit>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
-
+			<!-- OWN dependencies -->
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>sshsig-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-
+			<!-- EXTERNAL dependencies ============================================================================= -->
 			<dependency>
-				<groupId>org.bouncycastle</groupId>
-				<artifactId>bcprov-jdk18on</artifactId>
-				<version>1.76</version>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${version.slf4j}</version>
 			</dependency>
 
+			<!-- TEST dependencies ================================================================================= -->
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
-				<version>5.10.0</version>
+				<version>${version.junit}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -44,30 +46,15 @@
 				<version>3.24.2</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.sshd</groupId>
-				<artifactId>sshd-core</artifactId>
-				<version>2.10.0</version>
-			</dependency>
-			<!-- https://mvnrepository.com/artifact/tomcat/tomcat-apr -->
-			<dependency>
-				<groupId>tomcat</groupId>
-				<artifactId>tomcat-apr</artifactId>
-				<version>5.5.23</version>
-			</dependency>
-			<!-- https://mvnrepository.com/artifact/net.i2p.crypto/eddsa -->
-			<dependency>
-				<groupId>net.i2p.crypto</groupId>
-				<artifactId>eddsa</artifactId>
-				<version>0.3.0</version>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>${version.slf4j}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<modules>
 		<module>core</module>
-		<!--
-		<module>samples</module>
-		-->
 	</modules>
 
 	<build>

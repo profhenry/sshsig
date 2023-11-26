@@ -25,14 +25,14 @@ public class SshSignature {
 
 	private final byte[] signatureData;
 
-	private final String signatureAlgorithm;
+	private final SignatureAlgorithm signatureAlgorithm;
 
-	public SshSignature(byte[] someSignatureData, String aSignatureAlgorithm) {
+	public SshSignature(byte[] someSignatureData, SignatureAlgorithm aSignatureAlgorithm) {
 		signatureData = someSignatureData;
 		signatureAlgorithm = aSignatureAlgorithm;
 	}
 
-	public String getSignatureAlgorithm() {
+	public SignatureAlgorithm getSignatureAlgorithm() {
 		return signatureAlgorithm;
 	}
 
@@ -64,6 +64,10 @@ public class SshSignature {
 
 	public void writeRawData(Path aPath) throws IOException {
 		Files.write(aPath, signatureData);
+	}
+
+	public byte[] getSignatureData() {
+		return signatureData;
 	}
 
 	private static void splitAfterFixedNumberOfChars(String aString, int aSize, Consumer<String> aConsumer) {

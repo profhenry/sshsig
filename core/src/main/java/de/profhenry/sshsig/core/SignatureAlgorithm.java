@@ -5,9 +5,15 @@ package de.profhenry.sshsig.core;
  */
 public enum SignatureAlgorithm {
 
+	SSH_DSS("SHA1WithDSA", "ssh-dss"),
+
 	RSA_SHA2_512("SHA512WithRSA", "rsa-sha2-512"),
 
-	RSA_SHA2_256("SHA256WithRSA", "rsa-sha2-256");
+	RSA_SHA2_256("SHA256WithRSA", "rsa-sha2-256"),
+
+	EdDSA("NONEwithECDSA", "ssh-ed25519"),
+
+	ED25519("Ed25519", "ssh-ed25519");
 
 	private final String signatureName;
 
