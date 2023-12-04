@@ -1,3 +1,8 @@
+<!--
+![License](https://img.shields.io/github/license/profhenry/sshsig)
+![Build Status](https://img.shields.io/github/actions/workflow/status/profhenry/sshsig/maven.yml)
+-->
+
 [![License][license-image]][license-url]
 [![Build Status](https://github.com/profhenry/sshsig/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/profhenry/sshsig/actions/workflows/maven.yml)
 
