@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.profhenry.sshsig.core;
+package de.profhenry.sshsig.mina;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -28,6 +28,9 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+
+import net.i2p.crypto.eddsa.EdDSAPrivateKey;
+import net.i2p.crypto.eddsa.EdDSAPublicKey;
 
 /**
  * @author profhenry
@@ -74,17 +77,17 @@ public class SshKeyUtil {
 		return new KeyPair(tPublicKey, tPrivateKey);
 	}
 
-	public static PrivateKey readEd25519PrivateKey(File aFile) throws Exception {
-		KeyFactory tKeyFactory = KeyFactory.getInstance("Ed25519");
+	public static EdDSAPrivateKey readEd25519PrivateKey(File aFile) throws Exception {
+		KeyFactory tKeyFactory = KeyFactory.getInstance("EdDSA", "EdDSA");
 		EncodedKeySpec tKeySpec = new PKCS8EncodedKeySpec(Files.readAllBytes(aFile.toPath()));
-		PrivateKey tPrivateKey = tKeyFactory.generatePrivate(tKeySpec);
+		EdDSAPrivateKey tPrivateKey = (EdDSAPrivateKey) tKeyFactory.generatePrivate(tKeySpec);
 		return tPrivateKey;
 	}
 
-	public static PublicKey readEd25519PublicKey(File aFile) throws Exception {
-		KeyFactory tKeyFactory = KeyFactory.getInstance("Ed25519");
+	public static EdDSAPublicKey readEd25519PublicKey(File aFile) throws Exception {
+		KeyFactory tKeyFactory = KeyFactory.getInstance("EdDSA", "EdDSA");
 		EncodedKeySpec tKeySpec = new X509EncodedKeySpec(Files.readAllBytes(aFile.toPath()));
-		PublicKey tPublicKey = tKeyFactory.generatePublic(tKeySpec);
+		EdDSAPublicKey tPublicKey = (EdDSAPublicKey) tKeyFactory.generatePublic(tKeySpec);
 		return tPublicKey;
 	}
 

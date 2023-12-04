@@ -1,3 +1,18 @@
+/* 
+ * Copyright 2023 Jan Henrik Wiesner
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.profhenry.sshsig.core;
 
 import java.io.File;
@@ -80,9 +95,9 @@ public final class SshSignatureGenerator<K> {
 	 * Generates a SSH signature for a string message.
 	 * <p>
 	 * 
-	 * @param aKey       the SSH key
+	 * @param aKey the SSH key
 	 * @param aNamespace the namespace
-	 * @param aMessage   the string message
+	 * @param aMessage the string message
 	 * @return the SSH signature
 	 * @throws SshSignatureException in case signature generation failed
 	 */
@@ -102,9 +117,9 @@ public final class SshSignatureGenerator<K> {
 	 * Generates a SSH signature for a byte message.
 	 * <p>
 	 * 
-	 * @param aKey       the SSH key
+	 * @param aKey the SSH key
 	 * @param aNamespace the namespace
-	 * @param aMessage   the byte message
+	 * @param aMessage the byte message
 	 * @return the SSH signature
 	 * @throws SshSignatureException in case signature generation failed
 	 */
@@ -124,11 +139,11 @@ public final class SshSignatureGenerator<K> {
 	 * Generates a SSH signature for the content of a file.
 	 * <p>
 	 * 
-	 * @param aKey       the SSH key
+	 * @param aKey the SSH key
 	 * @param aNamespace the namespace
-	 * @param aFile      the file
+	 * @param aFile the file
 	 * @return the SSH signature
-	 * @throws IOException           in case reading from file failed
+	 * @throws IOException in case reading from file failed
 	 * @throws SshSignatureException in case signature generation failed
 	 */
 	public SshSignature generateSignature(K aKey, String aNamespace, File aFile)
@@ -150,11 +165,11 @@ public final class SshSignatureGenerator<K> {
 	 * Generates a SSH signature for data provided by an input stream.
 	 * <p>
 	 * 
-	 * @param aKey          the key
-	 * @param aNamespace    the namespace
+	 * @param aKey the key
+	 * @param aNamespace the namespace
 	 * @param anInputStream the inputstream
 	 * @return the SSH signature
-	 * @throws IOException           in case reading from input stream failed
+	 * @throws IOException in case reading from input stream failed
 	 * @throws SshSignatureException in case signature generation failed
 	 */
 	public SshSignature generateSignature(K aKey, String aNamespace, InputStream anInputStream)
@@ -211,14 +226,14 @@ public final class SshSignatureGenerator<K> {
 
 		// call signature engine
 		SigningResult tSigningResult = signingBackend.signData(aKey, tDataToSign);
-		LOGGER.debug("signed data: {}", HexUtil.bytesToHex(tSigningResult.signedContent));
+		LOGGER.debug("signed data: {}", HexUtil.bytesToHex(tSigningResult.getSignedContent()));
 
 		SshBuffer tBuffer = new SshBuffer();
 		tBuffer.appendPreamble(MAGIC_PREAMBLE);
 		tBuffer.appendInt(SIG_VERSION);
 
 		// public key
-		tBuffer.appendByteArray(publicKeyEncoder.encodePublicKey(tSigningResult.publicKey));
+		tBuffer.appendByteArray(publicKeyEncoder.encodePublicKey(tSigningResult.getPublicKey()));
 		// namespace
 		tBuffer.appendString(aNamespace);
 		// reserved
@@ -226,10 +241,10 @@ public final class SshSignatureGenerator<K> {
 		// hash algorithm
 		tBuffer.appendString(hashAlgorithm.getNameUsedInSshProtocol());
 		// signed content
-		tBuffer.appendStringAndByteArray(tSigningResult.signatureAlgorithm.getNameUsedInSshProtocol(),
-				tSigningResult.signedContent);
+		tBuffer.appendStringAndByteArray(tSigningResult.getSignatureAlgorithm().getNameUsedInSshProtocol(),
+				tSigningResult.getSignedContent());
 
-		return new SshSignature(tBuffer.toByteArray(), tSigningResult.signatureAlgorithm);
+		return new SshSignature(tBuffer.toByteArray(), tSigningResult.getSignatureAlgorithm());
 	}
 
 	/**
@@ -246,7 +261,7 @@ public final class SshSignatureGenerator<K> {
 	 * </ol>
 	 * <p>
 	 * 
-	 * @param aNamespace     the namespace
+	 * @param aNamespace the namespace
 	 * @param aHashedMessage the hashed message
 	 * @return the blob
 	 */

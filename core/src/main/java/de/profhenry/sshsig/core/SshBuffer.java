@@ -1,3 +1,18 @@
+/* 
+ * Copyright 2023 Jan Henrik Wiesner
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.profhenry.sshsig.core;
 
 import java.io.ByteArrayOutputStream;
@@ -14,7 +29,7 @@ import java.nio.charset.StandardCharsets;
  * <li>strings</li>
  * <li>{@link BigInteger}s</li>
  * <li>preambles</li>
- * <li>sequence of string and byte array</li>
+ * <li>sequence of a string and a byte array</li>
  * </ul>
  * 
  * @author profhenry
@@ -58,7 +73,7 @@ public final class SshBuffer {
 	/**
 	 * Appends a byte array.
 	 * <p>
-	 * First writes an integer with the length of the byte array followed by the content of the byte array.
+	 * First writes an integer with the length of the byte array followed by the complete content of the byte array.
 	 * <p>
 	 * Added bytes: 4 + length of the byte array
 	 * 
@@ -70,15 +85,15 @@ public final class SshBuffer {
 	}
 
 	/**
-	 * Appends a part of a byte array.
+	 * Appends a part/slice of a byte array.
 	 * <p>
 	 * First writes an integer with the requested length followed by the requested bytes of the byte array.
 	 * <p>
 	 * Added bytes: 4 + specified length
 	 * 
 	 * @param aByteArray the byte array
-	 * @param anOffset   the offset
-	 * @param aLength    the length
+	 * @param anOffset the offset
+	 * @param aLength the length
 	 */
 	public void appendByteArray(byte[] aByteArray, int anOffset, int aLength) {
 		write(aLength);
@@ -88,7 +103,7 @@ public final class SshBuffer {
 	/**
 	 * Appends an integer value.
 	 * <p>
-	 * Integer values are encoded little endian.
+	 * Integer values are encoded big endian.
 	 * <p>
 	 * Added bytes: 4
 	 * 
@@ -119,7 +134,7 @@ public final class SshBuffer {
 	 * <p>
 	 * Added bytes: 4 + 4 + number of chars + 4 + length of the byte array
 	 * 
-	 * @param aString    the string
+	 * @param aString the string
 	 * @param aByteArray the byte array
 	 */
 	public void appendStringAndByteArray(String aString, byte[] aByteArray) {
@@ -145,9 +160,9 @@ public final class SshBuffer {
 	}
 
 	private void write(int anInt) {
-		byteArrayOutputStream.write((anInt >>> 24) & 0xFF);
-		byteArrayOutputStream.write((anInt >>> 16) & 0xFF);
-		byteArrayOutputStream.write((anInt >>> 8) & 0xFF);
-		byteArrayOutputStream.write((anInt >>> 0) & 0xFF);
+		byteArrayOutputStream.write(anInt >>> 24);
+		byteArrayOutputStream.write(anInt >>> 16);
+		byteArrayOutputStream.write(anInt >>> 8);
+		byteArrayOutputStream.write(anInt >>> 0);
 	}
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.profhenry.sshsig.core;
+package de.profhenry.sshsig.mina;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,12 +23,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.security.PublicKey;
+import java.security.Security;
 
+import org.apache.sshd.agent.SshAgent;
+import org.apache.sshd.agent.local.AgentImpl;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
+
+import de.profhenry.sshsig.core.HashAlgorithm;
+import de.profhenry.sshsig.core.SshSignature;
+import de.profhenry.sshsig.core.SshSignatureException;
+import de.profhenry.sshsig.core.SshSignatureGenerator;
+import net.i2p.crypto.eddsa.EdDSASecurityProvider;
 
 /**
  * @author profhenry
@@ -39,34 +48,36 @@ public class SshSignatureGeneratorTest {
 
 	private static final String NAMESPACE = "test";
 
+	@BeforeAll
+	static void setup() {
+		Security.addProvider(new EdDSASecurityProvider());
+	}
+
 	@Nested
 	class Dsa {
 
-		// 45
-		// 30 2b 0214 7f0b5e3df3a5c228c597b336f5b9f3675ac2c9e2 0213 408c627a6d8b87b25dc7b9d160aaa99ff3a3bc
+		private SshAgent sshAgent;
 
-		// 46
-		// 30 2c 0214 6980619c7284bc131857d7a41f707ad4f8d31a64 0214 2461e9f6fa7de6260f297c565d166d6b1351214f
-
-		// 47
-		// 30 2d 0214 4861246ee59977a96a16387d88b6bf1265e783c0 0215 0087a7b9cfc46ff3fe813df3de8937f07a51ba9f6a
-		// 30 2d 0215 00810c0e13980993cbd3813819b0bc1a9a10fcabc0 0214 22c7bec963fb14e581338e3ba60dffc3030ac83f
-
-		// 48
-		// 30 2e 0215 008a9391b589bc7fa221a4e86d9736003bab07f727 0215 00847cfc20d0f14f5df400343f4c96ecfae0fae885
-
-		private KeyPair keyPair;
+		private PublicKey publicKey;
 
 		@BeforeEach
 		void setup() throws Exception {
-			keyPair = SshKeyUtil.readDsaKeyPair();
+			sshAgent = new AgentImpl();
+			KeyPair tKeyPair = SshKeyUtil.readDsaKeyPair();
+			sshAgent.addIdentity(tKeyPair, "test_dsa");
+			publicKey = tKeyPair.getPublic();
 		}
 
 		@Nested
 		class Sha256 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator =
-					SshSignatureGenerator.create().withHashAlgorithm(HashAlgorithm.SHA_256);
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+						.withHashAlgorithm(HashAlgorithm.SHA_256);
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE_START =
@@ -85,34 +96,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws Exception {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."
@@ -127,7 +138,12 @@ public class SshSignatureGeneratorTest {
 		@Nested
 		class Sha512 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator = SshSignatureGenerator.create();
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE_START =
@@ -146,34 +162,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws Exception {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().startsWith(EXPECTED_SIGNATURE_START);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."
@@ -189,18 +205,28 @@ public class SshSignatureGeneratorTest {
 	@Nested
 	class Rsa {
 
-		private KeyPair keyPair;
+		private SshAgent sshAgent;
+
+		private PublicKey publicKey;
 
 		@BeforeEach
 		void setup() throws Exception {
-			keyPair = SshKeyUtil.readRsaKeyPair();
+			sshAgent = new AgentImpl();
+			KeyPair tKeyPair = SshKeyUtil.readRsaKeyPair();
+			sshAgent.addIdentity(tKeyPair, "test_rsa");
+			publicKey = tKeyPair.getPublic();
 		}
 
 		@Nested
 		class Sha256 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator =
-					SshSignatureGenerator.create().withHashAlgorithm(HashAlgorithm.SHA_256);
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+						.withHashAlgorithm(HashAlgorithm.SHA_256);
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE =
@@ -226,34 +252,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws SshSignatureException {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."
@@ -268,7 +294,12 @@ public class SshSignatureGeneratorTest {
 		@Nested
 		class Sha512 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator = SshSignatureGenerator.create();
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE =
@@ -294,34 +325,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws SshSignatureException {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."
@@ -335,21 +366,30 @@ public class SshSignatureGeneratorTest {
 	}
 
 	@Nested
-	@EnabledForJreRange(min = JRE.JAVA_17)
 	class Ed25519 {
 
-		private KeyPair keyPair;
+		private SshAgent sshAgent;
+
+		private PublicKey publicKey;
 
 		@BeforeEach
 		void setup() throws Exception {
-			keyPair = SshKeyUtil.readEd25519KeyPair();
+			sshAgent = new AgentImpl();
+			KeyPair tKeyPair = SshKeyUtil.readEd25519KeyPair();
+			sshAgent.addIdentity(tKeyPair, "test_ed25519");
+			publicKey = tKeyPair.getPublic();
 		}
 
 		@Nested
 		class Sha256 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator =
-					SshSignatureGenerator.create().withHashAlgorithm(HashAlgorithm.SHA_256);
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+						.withHashAlgorithm(HashAlgorithm.SHA_256);
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE =
@@ -362,34 +402,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws SshSignatureException {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."
@@ -404,7 +444,12 @@ public class SshSignatureGeneratorTest {
 		@Nested
 		class Sha512 {
 
-			private SshSignatureGenerator<KeyPair> sshSignatureGenerator = SshSignatureGenerator.create();
+			private SshSignatureGenerator<PublicKey> sshSignatureGenerator;
+
+			@BeforeEach
+			void setup() throws Exception {
+				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+			}
 
 			// @formatter:off
 			private static final String EXPECTED_SIGNATURE =
@@ -417,34 +462,34 @@ public class SshSignatureGeneratorTest {
 			@Test
 			void testSignString() throws SshSignatureException {
 				String tMessage = MESSAGE;
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tMessage);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tMessage);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignByteArray() throws SshSignatureException {
 				byte[] tByteArray = MESSAGE.getBytes();
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tByteArray);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tByteArray);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignFile() throws IOException, SshSignatureException {
 				File tFile = new File("../message.txt");
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tFile);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tFile);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testSignInputStream() throws IOException, SshSignatureException {
 				InputStream tInputStream = new ByteArrayInputStream(MESSAGE.getBytes());
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, tInputStream);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, tInputStream);
 				assertThat(tSignature.getSignatureData()).asBase64Encoded().isEqualTo(EXPECTED_SIGNATURE);
 			}
 
 			@Test
 			void testVerifyWithSshKeyGen() throws SshSignatureException, IOException, InterruptedException {
-				SshSignature tSignature = sshSignatureGenerator.generateSignature(keyPair, NAMESPACE, MESSAGE);
+				SshSignature tSignature = sshSignatureGenerator.generateSignature(publicKey, NAMESPACE, MESSAGE);
 				String tSignatureFileName = "test."
 						+ tSignature.getSignatureAlgorithm()
 						+ "."

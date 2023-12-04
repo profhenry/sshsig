@@ -8,6 +8,13 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>http://www.spdx.org/licenses/Apache-2.0</url>
+		</license>
+	</licenses>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -31,7 +38,28 @@
 				<artifactId>slf4j-api</artifactId>
 				<version>${version.slf4j}</version>
 			</dependency>
-
+			<!-- https://mvnrepository.com/artifact/net.i2p.crypto/eddsa -->
+			<dependency>
+				<groupId>net.i2p.crypto</groupId>
+				<artifactId>eddsa</artifactId>
+				<version>0.3.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>1.76</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.sshd</groupId>
+				<artifactId>sshd-core</artifactId>
+				<version>2.10.0</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/tomcat/tomcat-apr -->
+			<dependency>
+				<groupId>tomcat</groupId>
+				<artifactId>tomcat-apr</artifactId>
+				<version>5.5.23</version>
+			</dependency>
 			<!-- TEST dependencies ================================================================================= -->
 			<dependency>
 				<groupId>org.junit</groupId>
@@ -54,7 +82,10 @@
 	</dependencyManagement>
 
 	<modules>
+		<module>bcprov</module>
 		<module>core</module>
+		<module>i2pcrypto</module>
+		<module>mina</module>
 	</modules>
 
 	<build>
@@ -67,6 +98,27 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-toolchains-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>toolchain</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<toolchains>
+						<jdk>
+							<version>1.8</version>
+						</jdk>
+					</toolchains>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 </project>
