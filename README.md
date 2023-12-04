@@ -1,3 +1,8 @@
+[![License][license-image]][license-url]
+[![Build Status](https://github.com/profhenry/sshsig/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/profhenry/sshsig/actions/workflows/maven.yml)
+
+
+
 SSH signatures for Java
 ====
 
@@ -58,10 +63,8 @@ vCvdb4l8M3+27D17NHb6Fg9iID2G5W
 
 
 
-
-
-
-
+[license-image]: https://img.shields.io/badge/license-apache%20v2-brightgreen.svg
+[license-url]: https://github.com/profhenry/sshsig/blob/master/LICENSE
 [sshsig-protocol]: https://github.com/openssh/openssh-portable/blob/V_9_5_P1/PROTOCOL.sshsig
 [openssh-8.1]: https://www.openssh.com/txt/release-8.1
 [blog-on-using-ssh-sigatures]: https://www.agwa.name/blog/post/ssh_signatures
