@@ -1,17 +1,17 @@
 SSH signatures for Java
 ====
 
-This Java library implements the OpenSSH lightweight signature (and verification) ability introduced with [OpenSSH 8.1][openssh-8.1].  
+This Java library implements the OpenSSH lightweight signature (and verification) ability introduced with [OpenSSH 8.1][openssh-8.1].
 It allows to sign (and verify) messages using SSH keys according to the [SSHSIG][sshsig-protocol] protocol.
 
-In OpenSSH signing a string can be done with `echo -n "a message" | ssh-keygen -Y sign -f ~/.ssh/id_rsa -n namespace`.  
+In OpenSSH signing a string can be done with `echo -n "a message" | ssh-keygen -Y sign -f ~/.ssh/id_rsa -n namespace`.
 For further details please take a look at the [manual][manual-ssh-keygen-sign] or read [this][blog-on-using-ssh-sigatures] blog post.
 
 Using this library signing a string might look like
 ```java
 KeyPairGenerator tKeyPairGenerator = KeyPairGenerator.getInstance("RSA");
 KeyPair tKeyPair = tKeyPairGenerator.generateKeyPair();
-SshSignatureGenerator.create().generateSignature(tKeyPair, "namespace", "a message");			
+SshSignatureGenerator.create().generateSignature(tKeyPair, "namespace", "a message");
 ```
 
 Both cases will produce a SSH signature like this
