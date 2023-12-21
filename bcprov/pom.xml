@@ -10,22 +10,27 @@
 	</parent>
 
 	<artifactId>sshsig-bcprov</artifactId>
+	<name>SSHSIG :: Tests for org.bouncycastle:bcprov</name>
 
 	<properties>
+		<maven.source.skip>true</maven.source.skip>
+		<maven.javadoc.skip>true</maven.javadoc.skip>
+		<maven.install.skip>true</maven.install.skip>
 		<maven.deploy.skip>true</maven.deploy.skip>
 	</properties>
 
 	<dependencies>
+		<!-- TESTING =============================================================================================== -->
 		<dependency>
 			<groupId>de.profhenry.sshsig</groupId>
 			<artifactId>sshsig-core</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk18on</artifactId>
+			<artifactId>bcprov-debug-jdk18on</artifactId>
+			<scope>test</scope>
 		</dependency>
-
-		<!-- TESTING =============================================================================================== -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>

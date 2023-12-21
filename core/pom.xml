@@ -43,41 +43,4 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<executions>
-					<!--
-					<execution>
-						<id>test-jdk8</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-						<configuration>
-							<jdkToolchain>
-								<version>1.8</version>
-							</jdkToolchain>
-						</configuration>
-					</execution>
-					-->
-					<execution>
-						<id>test-jdk17</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-						<configuration>
-							<jdkToolchain>
-								<version>17</version>
-							</jdkToolchain>
-							<reportsDirectory>${project.build.directory}/surefire-reports/jkd17</reportsDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
 </project>
