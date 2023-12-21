@@ -10,6 +10,7 @@
 	</parent>
 
 	<artifactId>sshsig-mina</artifactId>
+	<name>SSHSIG :: (Apache Mina SSH-Agent Support)</name>
 
 	<dependencies>
 		<dependency>

@@ -10,6 +10,7 @@
 	</parent>
 
 	<artifactId>sshsig-core</artifactId>
+	<name>SSHSIG :: Core Implementation</name>
 
 	<dependencies>
 		<dependency>
