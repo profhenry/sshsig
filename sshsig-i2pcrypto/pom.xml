@@ -9,7 +9,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>sshsig.i2pcrypto</artifactId>
+	<artifactId>sshsig-i2pcrypto</artifactId>
 	<name>SSHSIG :: Tests for net.i2p.crypto:eddsa</name>
 
 	<properties>

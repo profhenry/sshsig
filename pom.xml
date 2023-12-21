@@ -129,10 +129,10 @@
 	</dependencyManagement>
 
 	<modules>
-		<module>core</module>
-		<module>mina</module>
-		<module>bcprov</module>
-		<module>i2pcrypto</module>
+		<module>sshsig-core</module>
+		<module>sshsig-mina</module>
+		<module>sshsig-bcprov</module>
+		<module>sshsig-i2pcrypto</module>
 	</modules>
 
 	<build>
