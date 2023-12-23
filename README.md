@@ -14,10 +14,13 @@ SSH signatures for Java
 This Java library implements the OpenSSH lightweight signature (and verification) ability introduced with [OpenSSH 8.1][openssh-8.1].
 It allows to sign (and verify) messages using SSH keys according to the [SSHSIG][sshsig-protocol] protocol.
 
-In OpenSSH signing a string can be done with `echo -n "a message" | ssh-keygen -Y sign -f ~/.ssh/id_rsa -n namespace`.
+With OpenSSH signing a string can be done with
+```bash
+echo -n "a message" | ssh-keygen -Y sign -f ~/.ssh/id_rsa -n namespace
+```
 For further details please take a look at the [manual][manual-ssh-keygen-sign] or read [this][blog-on-using-ssh-sigatures] blog post.
 
-Using this library signing a string might look like
+Using this Java library signing a string looks like
 ```java
 KeyPairGenerator tKeyPairGenerator = KeyPairGenerator.getInstance("RSA");
 KeyPair tKeyPair = tKeyPairGenerator.generateKeyPair();
@@ -42,17 +45,46 @@ vCvdb4l8M3+27D17NHb6Fg9iID2G5W
 -----END SSH SIGNATURE-----
 ```
 
+Features
+---
 
+* Required minimal Java runtime: 8
+* Minimal 3rd party dependencies (only [slf4j])
+* Content to be signed can be provided as string, byte array, file or as input stream
+* Supported ssh key types: Dsa, Rsa, Ed25519
+* Pluggable signing backend: The default backend uses the [Java Cryptography Architecture (JCA)][JCA] but we also provide an alternative backend which facilitates using an SSH-Agent via [Apache MINA]. 
+* Works with other JCA/JCE provider, tested with [Bouncy Castle] or [net.i2p.crypto:eddsa] 
+* (OSGi bundle) still pending
+* (Command line client) still pending
 
+Usage
+---
 
+Released artifacts are available at [Maven Central][mvnrepo-sshsig].
 
+We provide the following artifacts:
 
+* *sshsig-core* - contains the core implementation including the default JCA signing backend 
+* *sshsig-mina* - contains the Apache MINA signing backend
+* (*sshsig-cli* - contains the command line interface) still pending
 
+You need at least *sshsig-core* which contains a fully functional implementation.
 
+For consuming via maven add the following snippet to your pom.xml
+```xml
+<dependency>
+    <groupId>de.profhenry.sshsig</groupId>
+    <artifactId>sshsig-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 
+For consuming via gradle add the following snippet to your build.gradle
+```groovy
+implementation group: 'de.profhenry.sshsig', name: 'sshsig-core', version: '1.0.0'
+```
 
-
-
+All other artifacts are optional and only required in case you need their provided features. 
 
 
 
@@ -74,4 +106,10 @@ vCvdb4l8M3+27D17NHb6Fg9iID2G5W
 [openssh-8.1]: https://www.openssh.com/txt/release-8.1
 [blog-on-using-ssh-sigatures]: https://www.agwa.name/blog/post/ssh_signatures
 [manual-ssh-keygen-sign]: https://man.openbsd.org/ssh-keygen#Y~4
+[slf4j]: https://www.slf4j.org/
+[JCA]: https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html
+[Bouncy Castle]: https://www.bouncycastle.org/
+[net.i2p.crypto:eddsa]: https://github.com/str4d/ed25519-java
+[Apache MINA]: https://mina.apache.org/mina-project/index.html
+[mvnrepo-sshsig]: https://mvnrepository.com/artifact/de.profhenry.sshsig
 
