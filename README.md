@@ -45,17 +45,20 @@ vCvdb4l8M3+27D17NHb6Fg9iID2G5W
 -----END SSH SIGNATURE-----
 ```
 
+
 Features
 ---
 
 * Required minimal Java runtime: 8
 * Minimal 3rd party dependencies (only [slf4j])
 * Content to be signed can be provided as string, byte array, file or as input stream
-* Supported ssh key types: Dsa, Rsa, Ed25519
+* Supported ssh key types: DSA, RSA, Ed25519
+* Supported hashing algorithms: SHA-256 and SHA-512
 * Pluggable signing backend: The default backend uses the [Java Cryptography Architecture (JCA)][JCA] but we also provide an alternative backend which facilitates using an SSH-Agent via [Apache MINA]. 
 * Works with other JCA/JCE provider, tested with [Bouncy Castle] or [net.i2p.crypto:eddsa] 
 * (OSGi bundle) still pending
 * (Command line client) still pending
+
 
 Usage
 ---
@@ -87,16 +90,34 @@ implementation group: 'de.profhenry.sshsig', name: 'sshsig-core', version: '1.0.
 All other artifacts are optional and only required in case you need their provided features. 
 
 
+Good to know
+---
+
+* **Ed25519 key support**  
+Java 8 comes with no support for Ed25519. So in case you want to sign with an Ed25519 key when using the default JCA signing engine you will need a 3rd party lib which adds Ed25519 support to JCA (for example [Bouncy Castle] or [net.i2p.crypto:eddsa]).
+In case you are using a Java 15+ runtime **or** you are using an SSH-Agent via the Apache MINA signing backend no additional JCA providers are required.
+
+* **RSA key support**  
+The SSHSIG protocol states that the allowed signing algorithms are *rsa-sha2-512* or *rsa-sha2-256*. However the OpenSSH implementation just uses *rsa-sha2-512*, so the Java library does the same thing.  
+
+* **DSA key suppport**  
+Signing with DSA keys was not explicitly mentioned in SSHSIG protocol but seems to be supported, so support was added in the Java library as well.
+Please note that DSA signatures are not deterministic! So when signing the **same** content with the **same** key you will get a different signature! 
+
+* **Hashing algorithm**  
+The SSHSIG protocol allows SHA-256 and SHA-512 for hashing messages before they get signed, where SHA-512 is the default. The Java library behaves the same way.
+Please note that every JVM comes at least with support for SHA-256. However most JVMs also support SHA-512 ([Temurin] for example). So depending on the used JVM you might need a 3rd party lib which adds SHA-512 support to JCA (for example [Bouncy Castle]).
+
+* **Reading SSH keys files with Java**  
+Reading existing SSH key files generated with ssh-keygen or openssl just with plain Java and **without** any 3rd party libs is a pain in the ass :-/.
+We did this in the unit tests for the core library in order to prove that this does **not** rely on any 3rd parts libs.
+For any serious or productive usage it is highly recommended to make use of 3rd party libs for reading SSH keys.
+Especially in case your keys have a passphrase it is probably best to make use of an SSH-Agent via Apache MINA which then also takes care of reading the SSH keys.
 
 
-
-
-
-
-
-
-
-
+License
+---
+This project is licensed under the Apache 2.0 License
 
 
 
@@ -111,5 +132,6 @@ All other artifacts are optional and only required in case you need their provid
 [Bouncy Castle]: https://www.bouncycastle.org/
 [net.i2p.crypto:eddsa]: https://github.com/str4d/ed25519-java
 [Apache MINA]: https://mina.apache.org/mina-project/index.html
+[Temurin]: https://adoptium.net/temurin/
 [mvnrepo-sshsig]: https://mvnrepository.com/artifact/de.profhenry.sshsig
 
