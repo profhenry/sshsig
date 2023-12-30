@@ -118,7 +118,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -179,7 +179,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -259,7 +259,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -327,7 +327,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -394,7 +394,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -449,7 +449,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}

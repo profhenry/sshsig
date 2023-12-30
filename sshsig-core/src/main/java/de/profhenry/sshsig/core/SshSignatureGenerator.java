@@ -59,9 +59,9 @@ public final class SshSignatureGenerator<K> {
 	private static final int SIG_VERSION = 1;
 
 	/**
-	 * The buffer size used when reading the message from an input stream.
+	 * The default buffer size.
 	 */
-	private static final int BUFFER_SIZE = 8192;
+	private static final int DEFAULT_BUFFER_SIZE = 8192;
 
 	/**
 	 * The backend used for the actual singing.
@@ -69,26 +69,43 @@ public final class SshSignatureGenerator<K> {
 	 */
 	private final SigningBackend<K> signingBackend;
 
-	private final PublicKeyEncoder publicKeyEncoder;
+	/**
+	 * The encoder for public keys in the SSH format.
+	 */
+	private final SshPublicKeyEncoder publicKeyEncoder;
 
 	/**
 	 * The hash algorithm used for hashing the message.
 	 */
 	private final HashAlgorithm hashAlgorithm;
 
-	private SshSignatureGenerator(SigningBackend<K> aSigningBackend, PublicKeyEncoder aPublicKeyEncoder,
-			HashAlgorithm aHashAlgorithm) {
+	/**
+	 * The buffer size used when reading the message from an input stream.
+	 */
+	private final int bufferSize;
+
+	private SshSignatureGenerator(SigningBackend<K> aSigningBackend, SshPublicKeyEncoder aPublicKeyEncoder,
+			HashAlgorithm aHashAlgorithm, int aBufferSize) {
 		signingBackend = aSigningBackend;
 		publicKeyEncoder = aPublicKeyEncoder;
 		hashAlgorithm = aHashAlgorithm;
+		bufferSize = Math.max(1024, aBufferSize);
 	}
 
 	public SigningBackend<K> getSigningBackend() {
 		return signingBackend;
 	}
 
+	public SshPublicKeyEncoder getPublicKeyEncoder() {
+		return publicKeyEncoder;
+	}
+
 	public HashAlgorithm getHashAlgorithm() {
 		return hashAlgorithm;
+	}
+
+	public int getBufferSize() {
+		return bufferSize;
 	}
 
 	/**
@@ -200,7 +217,7 @@ public final class SshSignatureGenerator<K> {
 	private byte[] hashMessage(InputStream anInputStream) throws SshSignatureException, IOException {
 		MessageDigest tMessageDigest = hashAlgorithm.createMessageDigestInstance();
 
-		byte[] tBuffer = new byte[BUFFER_SIZE];
+		byte[] tBuffer = new byte[bufferSize];
 		int tReadBytes = 0;
 		int i;
 		while ((i = anInputStream.read(tBuffer, 0, tBuffer.length)) >= 0) {
@@ -208,11 +225,11 @@ public final class SshSignatureGenerator<K> {
 			tReadBytes += i;
 		}
 
+		byte[] tHash = tMessageDigest.digest();
 		LOGGER.debug("hashed {} bytes using {} ({})",
 				tReadBytes,
 				tMessageDigest.getAlgorithm(),
 				tMessageDigest.getProvider());
-		byte[] tHash = tMessageDigest.digest();
 		LOGGER.debug("hashed message: {}", HexUtil.bytesToHex(tHash));
 		return tHash;
 	}
@@ -277,15 +294,26 @@ public final class SshSignatureGenerator<K> {
 
 	// =================================================================================================================
 
-	public static <K> SshSignatureGenerator<K> create(SigningBackend<K> aSigningEngine) {
-		return new SshSignatureGenerator<>(aSigningEngine, new PublicKeyEncoder(), HashAlgorithm.SHA_512);
+	public static SshSignatureGenerator<KeyPair> create() {
+		return new SshSignatureGenerator<>(new JcaSingingBackend(),
+				new SshPublicKeyEncoder(),
+				HashAlgorithm.SHA_512,
+				DEFAULT_BUFFER_SIZE);
 	}
 
-	public static SshSignatureGenerator<KeyPair> create() {
-		return new SshSignatureGenerator<>(new JcaSingingBackend(), new PublicKeyEncoder(), HashAlgorithm.SHA_512);
+	public <KK> SshSignatureGenerator<KK> withSigningBackend(SigningBackend<KK> aSigningBackend) {
+		return new SshSignatureGenerator<>(aSigningBackend, publicKeyEncoder, hashAlgorithm, bufferSize);
+	}
+
+	public SshSignatureGenerator<K> withPublicKeyEncoder(SshPublicKeyEncoder aPublicKeyEncoder) {
+		return new SshSignatureGenerator<>(signingBackend, aPublicKeyEncoder, hashAlgorithm, bufferSize);
 	}
 
 	public SshSignatureGenerator<K> withHashAlgorithm(HashAlgorithm aHashAlgorithm) {
-		return new SshSignatureGenerator<>(signingBackend, publicKeyEncoder, aHashAlgorithm);
+		return new SshSignatureGenerator<>(signingBackend, publicKeyEncoder, aHashAlgorithm, bufferSize);
+	}
+
+	public SshSignatureGenerator<K> withBufferSize(int aBufferSize) {
+		return new SshSignatureGenerator<>(signingBackend, publicKeyEncoder, hashAlgorithm, aBufferSize);
 	}
 }

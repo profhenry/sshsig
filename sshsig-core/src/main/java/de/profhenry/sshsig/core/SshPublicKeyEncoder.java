@@ -20,29 +20,57 @@ import java.security.interfaces.DSAPublicKey;
 import java.security.interfaces.RSAPublicKey;
 
 /**
+ * Encoder for public keys in SSH format.
+ * <p>
+ * This encoder returns a blob containing the SSH public key as specified in the SSH protocol.<br>
+ * The second column of a SSH public key file contains this blob (base64 encoded).
+ * <p>
+ * 
  * @author profhenry
  */
-public class PublicKeyEncoder {
+public class SshPublicKeyEncoder {
 
+	/** key format identifier for DSA keys **/
 	private static final String KEY_FORMAT_IDENTIFIER_DSS = "ssh-dss";
 
+	/** key format identifier for RSA keys **/
 	private static final String KEY_FORMAT_IDENTIFIER_RSA = "ssh-rsa";
 
+	/** key format identifier for ED25519 keys **/
 	private static final String KEY_FORMAT_IDENTIFIER_ED25519 = "ssh-ed25519";
 
+	/**
+	 * Encodes a public key in SSH format.
+	 * <p>
+	 * 
+	 * @param aPublicKey a public key
+	 * @return the encoded public key
+	 * @throws SshSignatureException in case the public key could no be encoded
+	 */
 	public byte[] encodePublicKey(PublicKey aPublicKey) throws SshSignatureException {
+		// In case of DSA or RSA public keys the detection is easy because JCA provides interfaces for those.
+		// This approach should also work in case other JCA Provider (like bouncy castler) are used.
 		if (aPublicKey instanceof DSAPublicKey) {
 			return encodeDsaPublicKey((DSAPublicKey) aPublicKey);
 		}
 		if (aPublicKey instanceof RSAPublicKey) {
 			return encodeRsaPublicKey((RSAPublicKey) aPublicKey);
 		}
-		if ("EdDSA".equals(aPublicKey.getAlgorithm())) {
-			// used by JDK17 and net.i2p.crypto
+		// The handling of ED25519 public keys is a bit more complicated.
+		// Since JDK8 comes with no support for ED25519 there is no interface to compile against.
+		// However we decided to add some support for ED25519. For using ED25519 you need a JDK17 as runtime JVM and/or
+		// a JCA security provider which adds ED25519 support.
+
+		// We decided to use the algorithm provided by the public key as incidator if we have an ED25519 key.
+		if ("Ed25519".equals(aPublicKey.getAlgorithm())) {
+			// used by org.bouncycastle:bcprov in default configuration
 			return encodeEd25519PublicKey(aPublicKey);
 		}
-		if ("Ed25519".equals(aPublicKey.getAlgorithm())) {
-			// used by org.bouncycastle
+		if ("EdDSA".equals(aPublicKey.getAlgorithm())) {
+			// used by
+			// - JDK17
+			// - net.i2p.crypto:eddsa
+			// - org.bouncycastle:bcprov (with activated org.bouncycastle.emulate.oracle property)
 			return encodeEd25519PublicKey(aPublicKey);
 		}
 		throw new SshSignatureException("Could not encode public key (" + aPublicKey.getClass().getName() + ")!");
@@ -51,7 +79,7 @@ public class PublicKeyEncoder {
 	/**
 	 * Encodes a DSA public key.
 	 * <p>
-	 * According to <a href="https://www.rfc-editor.org/rfc/rfc4253#page-14">RTC 4253</a> DSA public key encoding is
+	 * According to <a href="https://www.rfc-editor.org/rfc/rfc4253#page-14">RTC 4253</a> the DSA public key encoding is
 	 * <ul>
 	 * <li>the key format identifier (ssh-dss)</li>
 	 * <li>prime (p)</li>
@@ -76,7 +104,7 @@ public class PublicKeyEncoder {
 	/**
 	 * Encodes a RSA public key.
 	 * <p>
-	 * According to <a href="https://www.rfc-editor.org/rfc/rfc4253#page-15">RTC 4253</a> RSA public key encoding is
+	 * According to <a href="https://www.rfc-editor.org/rfc/rfc4253#page-15">RTC 4253</a> the RSA public key encoding is
 	 * <ul>
 	 * <li>the key format identifier (ssh-rsa)</li>
 	 * <li>RSA public exponent (e)</li>
@@ -97,7 +125,7 @@ public class PublicKeyEncoder {
 	/**
 	 * Encodes a ED25519 public key.
 	 * <p>
-	 * According to <a href="https://tools.ietf.org/html/rfc8709">RFC 8709</a> ED25519 public key encoding is
+	 * According to <a href="https://tools.ietf.org/html/rfc8709">RFC 8709</a> the ED25519 public key encoding is
 	 * <ul>
 	 * <li>the key format identifier (ssh-ed25519)</li>
 	 * <li>the public key (A)</li>
@@ -105,8 +133,8 @@ public class PublicKeyEncoder {
 	 * <p>
 	 * <b>NOTE:</b><br>
 	 * Since we are compiling against a JDK8 which has no support for ED25519 we are not able to provide a proper
-	 * encoding method :-/. For the case the public key has the X.509 format we can extract the 32 bytes from the X.509
-	 * encoding.
+	 * encoding method :-/.<br>
+	 * For the case the public key has the X.509 format we can extract the required 32 bytes from the X.509 encoding.
 	 * 
 	 * @param aPublicKey the ED25519 public key
 	 * @return the encoded ED25519 key

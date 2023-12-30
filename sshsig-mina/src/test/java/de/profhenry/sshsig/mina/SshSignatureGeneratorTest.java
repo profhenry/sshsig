@@ -75,7 +75,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+				sshSignatureGenerator = SshSignatureGenerator.create()
+						.withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent))
 						.withHashAlgorithm(HashAlgorithm.SHA_256);
 			}
 
@@ -129,7 +130,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -142,7 +143,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+				sshSignatureGenerator =
+						SshSignatureGenerator.create().withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent));
 			}
 
 			// @formatter:off
@@ -195,7 +197,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -224,7 +226,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+				sshSignatureGenerator = SshSignatureGenerator.create()
+						.withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent))
 						.withHashAlgorithm(HashAlgorithm.SHA_256);
 			}
 
@@ -285,7 +288,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -298,7 +301,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+				sshSignatureGenerator =
+						SshSignatureGenerator.create().withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent));
 			}
 
 			// @formatter:off
@@ -358,7 +362,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -387,7 +391,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent))
+				sshSignatureGenerator = SshSignatureGenerator.create()
+						.withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent))
 						.withHashAlgorithm(HashAlgorithm.SHA_256);
 			}
 
@@ -435,7 +440,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}
@@ -448,7 +453,8 @@ public class SshSignatureGeneratorTest {
 
 			@BeforeEach
 			void setup() throws Exception {
-				sshSignatureGenerator = SshSignatureGenerator.create(new ApacheMinaSshAgentEngine(sshAgent));
+				sshSignatureGenerator =
+						SshSignatureGenerator.create().withSigningBackend(new ApacheMinaSshAgentEngine(sshAgent));
 			}
 
 			// @formatter:off
@@ -495,7 +501,7 @@ public class SshSignatureGeneratorTest {
 						+ "."
 						+ sshSignatureGenerator.getHashAlgorithm()
 						+ ".sig";
-				tSignature.write(Paths.get(tSignatureFileName));
+				tSignature.writeAsPem(Paths.get(tSignatureFileName));
 
 				verifyUsingSshKeygen(MESSAGE, NAMESPACE, tSignatureFileName);
 			}

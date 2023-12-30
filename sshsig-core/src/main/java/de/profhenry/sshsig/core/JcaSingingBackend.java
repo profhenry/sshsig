@@ -35,12 +35,14 @@ import de.profhenry.sshsig.core.util.HexUtil;
  * For signing you need to specify a {@link KeyPair}, the {@link PrivateKey} is required for the actual signing process,
  * the {@link PublicKey} is required because it gets embedded into the SSH signature.
  * <p>
- * The SSH
  * 
  * @author profhenry
  */
 public class JcaSingingBackend implements SigningBackend<KeyPair> {
 
+	/**
+	 * The logger.
+	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(JcaSingingBackend.class);
 
 	@Override
@@ -70,14 +72,18 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		if ("RSA".equals(tPrivateKey.getAlgorithm())) {
 			return signRsa(tPrivateKey, tPublicKey, someDataToSign);
 		}
-		if ("EdDSA".equals(tPrivateKey.getAlgorithm())) {
-			// used by JDK17 and net.i2p.crypto
-			// JDK17 uses EdDSA for Ed25519 and Ed448
-			// TODO i would love to prevent Ed448 but i think this is not possible when compiling againt JDK8 :-/
+		if ("Ed25519".equals(tPrivateKey.getAlgorithm())) {
+			// used by org.bouncycastle:bcprov in default configuration
 			return signEd25519(tPrivateKey, tPublicKey, someDataToSign);
 		}
-		if ("Ed25519".equals(tPrivateKey.getAlgorithm())) {
-			// used by org.bouncycastle
+		if ("EdDSA".equals(tPrivateKey.getAlgorithm())) {
+			// used by
+			// - JDK17
+			// - net.i2p.crypto:eddsa
+			// - org.bouncycastle:bcprov (with activated org.bouncycastle.emulate.oracle property)
+
+			// EdDSA is also used for Ed448 (at least when using JDK17)
+			// TODO i would love to prevent using Ed448 but i think this is not possible when compiling againt JDK8 :-/
 			return signEd25519(tPrivateKey, tPublicKey, someDataToSign);
 		}
 

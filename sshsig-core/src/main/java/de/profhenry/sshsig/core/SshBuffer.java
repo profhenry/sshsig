@@ -129,7 +129,7 @@ public final class SshBuffer {
 	/**
 	 * Appends a sequence of a string and a byte array.
 	 * <p>
-	 * First writes the overall bytes required by this sequence followed by the string and the byte array (eqch with
+	 * First writes the overall bytes required by this sequence followed by the string and the byte array (each with
 	 * their length fields as well).
 	 * <p>
 	 * Added bytes: 4 + 4 + number of chars + 4 + length of the byte array
