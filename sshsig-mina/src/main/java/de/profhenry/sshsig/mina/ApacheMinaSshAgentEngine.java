@@ -19,19 +19,23 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.security.interfaces.DSAPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Map.Entry;
 
 import org.apache.sshd.agent.SshAgent;
 
 import de.profhenry.sshsig.core.SignatureAlgorithm;
 import de.profhenry.sshsig.core.SshSignatureException;
 import de.profhenry.sshsig.core.spi.SigningBackend;
-import net.i2p.crypto.eddsa.EdDSAPublicKey;
 
 /**
+ * Signing backend which uses an (external) SSH agent via Apache MINA.
+ * <p>
+ * 
  * @author profhenry
  */
 public class ApacheMinaSshAgentEngine implements SigningBackend<PublicKey> {
 
+	/** The SSH agent. */
 	private final SshAgent sshAgent;
 
 	public ApacheMinaSshAgentEngine(SshAgent anSshAgent) {
@@ -45,20 +49,21 @@ public class ApacheMinaSshAgentEngine implements SigningBackend<PublicKey> {
 
 	@Override
 	public SigningResult signData(PublicKey aPublicKey, byte[] someDataToSign) throws SshSignatureException {
-		// 1) determine signature algorithm
 		SignatureAlgorithm tSignatureAlgorithm = determineSignatureAlgorithm(aPublicKey);
-
-		byte[] tSignedContent;
+		String tSigningAlgorithm = tSignatureAlgorithm.getNameUsedInSshProtocol();
 
 		try {
-			tSignedContent =
-					sshAgent.sign(null, aPublicKey, tSignatureAlgorithm.getNameUsedInSshProtocol(), someDataToSign)
-							.getValue();
+			Entry<String, byte[]> tResult = sshAgent.sign(null, aPublicKey, tSigningAlgorithm, someDataToSign);
+			if (!tSigningAlgorithm.equals(tResult.getKey())) {
+				throw new SshSignatureException("SSH Agent used wrong signing algorithm, requested: "
+						+ tSigningAlgorithm
+						+ " used: "
+						+ tResult.getKey());
+			}
+			return new SigningResult(tSignatureAlgorithm, tResult.getValue());
 		} catch (IOException exc) {
-			throw new SshSignatureException("", exc);
+			throw new SshSignatureException("Signing via SSH Agent failed!", exc);
 		}
-
-		return new SigningResult(tSignatureAlgorithm, tSignedContent);
 	}
 
 	protected SignatureAlgorithm determineSignatureAlgorithm(PublicKey aPublicKey) throws SshSignatureException {
@@ -69,7 +74,7 @@ public class ApacheMinaSshAgentEngine implements SigningBackend<PublicKey> {
 			// TODO RSA_SHA2_256 would also be an option here
 			return SignatureAlgorithm.RSA_SHA2_512;
 		}
-		if (aPublicKey instanceof EdDSAPublicKey) {
+		if ("EdDSA".equals(aPublicKey.getAlgorithm())) {
 			return SignatureAlgorithm.SSH_ED25519;
 		}
 		throw new SshSignatureException(
