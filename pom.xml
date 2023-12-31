@@ -3,7 +3,7 @@
 
 	<groupId>de.profhenry.sshsig</groupId>
 	<artifactId>sshsig-parent</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>SSHSIG :: Parent</name>
@@ -34,7 +34,7 @@
 		<connection>scm:git:git@github.com:profhenry/sshsig.git</connection>
 		<url>https://github.com/profhenry/sshsig.git</url>
 		<developerConnection>scm:git:git@github.com:profhenry/sshsig.git</developerConnection>
-		<tag>sshsig-1.0.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
