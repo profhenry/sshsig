@@ -55,8 +55,8 @@ Features
 * Supported ssh key types: DSA, RSA, Ed25519
 * Supported hashing algorithms: SHA-256 and SHA-512
 * Pluggable signing backend: The default backend uses the [Java Cryptography Architecture (JCA)][JCA] but we also provide an alternative backend which facilitates using an SSH-Agent via [Apache MINA]. 
-* Works with other JCA/JCE provider, tested with [Bouncy Castle] or [net.i2p.crypto:eddsa] 
-* (OSGi bundle) still pending
+* Works with other JCA/JCE provider, tested with [Bouncy Castle] and [net.i2p.crypto:eddsa] 
+* OSGi bundle
 * (Command line client) still pending
 
 
@@ -95,7 +95,7 @@ Good to know
 
 * **Ed25519 key support**  
 Java 8 comes with no support for Ed25519. So in case you want to sign with an Ed25519 key when using the default JCA signing engine you will need a 3rd party lib which adds Ed25519 support to JCA (for example [Bouncy Castle] or [net.i2p.crypto:eddsa]).
-In case you are using a Java 15+ runtime **or** you are using an SSH-Agent via the Apache MINA signing backend no additional JCA providers are required.
+In case you are using a Java 15+ runtime no additional JCA providers are required.
 
 * **RSA key support**  
 The SSHSIG protocol states that the allowed signing algorithms are *rsa-sha2-512* or *rsa-sha2-256*. However the OpenSSH implementation just uses *rsa-sha2-512*, so the Java library does the same thing.  
