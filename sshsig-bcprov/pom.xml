@@ -13,6 +13,7 @@
 	<name>SSHSIG :: Tests for org.bouncycastle:bcprov</name>
 
 	<properties>
+		<bnd.skip>true</bnd.skip>
 		<maven.source.skip>true</maven.source.skip>
 		<maven.javadoc.skip>true</maven.javadoc.skip>
 		<maven.install.skip>true</maven.install.skip>

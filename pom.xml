@@ -108,7 +108,7 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.sshd</groupId>
-				<artifactId>sshd-core</artifactId>
+				<artifactId>sshd-osgi</artifactId>
 				<version>${version.sshd}</version>
 			</dependency>
 			<dependency>
@@ -198,6 +198,11 @@
 					</configuration>
 				</plugin>
 				<plugin>
+					<groupId>biz.aQute.bnd</groupId>
+					<artifactId>bnd-maven-plugin</artifactId>
+					<version>6.4.0</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-source-plugin</artifactId>
 					<version>3.3.0</version>
@@ -254,6 +259,19 @@
 						</jdk>
 					</toolchains>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<executions>
+					<execution>
+						<id>jar</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
