@@ -23,18 +23,49 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * Data container for SSH signatures.
+ * <p>
+ * Contains
+ * <ul>
+ * <li>the raw binary signature data</li>
+ * <li>the used signature algorithm (as additional information)</li>
+ * </ul>
+ * <p>
+ * This class also provides methodes for getting the textual representation in PEM format.
+ * <p>
+ * 
  * @author profhenry
  */
 public class SshSignature {
 
+	/**
+	 * Label used in the PEM header and footer lines.
+	 */
 	private static final String PEM_LABEL = "SSH SIGNATURE";
 
-	// SSHSIG protocol states that content SHOULD wrap after 76 chars
-	// However the actual OpenSSH implementation wraps after 70 chars
+	/**
+	 * Line length of the base64 encoded content.
+	 * <p>
+	 * <b>Please note:</b><br>
+	 * RFC7468 states that content MUST wrap after 64 chars<br>
+	 * SSHSIG protocol states that content SHOULD wrap after 76 chars<br>
+	 * However the actual OpenSSH implementation wraps after 70 chars<br>
+	 * <p>
+	 * We are quite confused which value to use here. It seems that the OpenSSH implementation is able to read and
+	 * verify signature files no matter what value is used, but we decided to stick to the value used by OpenSSH.
+	 */
 	private static final int LINE_LENGTH = 70;
 
+	/**
+	 * The raw binary signature data.
+	 */
 	private final byte[] signatureData;
 
+	/**
+	 * The used signature algotithm.
+	 * <p>
+	 * This is only provided for informational purposes as this is also encoded in the raw binary data.
+	 */
 	private final SignatureAlgorithm signatureAlgorithm;
 
 	public SshSignature(byte[] someSignatureData, SignatureAlgorithm aSignatureAlgorithm) {
@@ -50,17 +81,36 @@ public class SshSignature {
 		return signatureData;
 	}
 
+	/**
+	 * Returns the textural representation in PEM format.
+	 * <p>
+	 * 
+	 * @return string with signature in PEM format
+	 */
 	public String toPem() {
 		StringWriter tWriter = new StringWriter();
 		writeAsPem(tWriter);
 		return tWriter.toString();
 	}
 
+	/**
+	 * Writes the textural representation in PEM format.
+	 * <p>
+	 * 
+	 * @param aWriter the writer
+	 */
 	public void writeAsPem(Writer aWriter) {
 		PemWriter tPemWriter = new PemWriter(aWriter, LINE_LENGTH);
 		tPemWriter.writeData(PEM_LABEL, signatureData);
 	}
 
+	/**
+	 * Writes the signature to a file (in PEM format).
+	 * <p>
+	 * 
+	 * @param aPath the path to the file
+	 * @throws IOException in case wirting the signature file failed
+	 */
 	public void writeAsPem(Path aPath) throws IOException {
 		try (BufferedWriter tWriter = Files.newBufferedWriter(aPath)) {
 			writeAsPem(tWriter);

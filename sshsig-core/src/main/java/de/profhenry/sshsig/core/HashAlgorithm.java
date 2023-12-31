@@ -22,7 +22,7 @@ import java.security.NoSuchAlgorithmException;
  * Defines the hash algorithms supported by SSH signature generation.
  * <p>
  * According to <a href="https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.sshsig">the SSH spec</a> the
- * following are hash algorithms are supported
+ * following hash algorithms are supported
  * <ul>
  * <li>SHA-256</li>
  * <li>SHA-512 (default)</li>

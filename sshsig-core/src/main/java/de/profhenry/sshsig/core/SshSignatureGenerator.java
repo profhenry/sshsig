@@ -32,14 +32,30 @@ import de.profhenry.sshsig.core.spi.SigningBackend.SigningResult;
 import de.profhenry.sshsig.core.util.HexUtil;
 
 /**
- * fdsfs for singing data using a SSH key
+ * Generator for SSH signatures.
  * <p>
- * https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.sshsig data since
+ * This implements the OpenSSH lightweight signature ability introduced with OpenSSH 8.1. It allows to sign messages
+ * using SSH keys according to the
+ * <a href="https://raw.githubusercontent.com/openssh/openssh-portable/master/PROTOCOL.sshsig">SSHSIG</a> protocol.
  * <p>
- * OpenSSH 8.1
+ * <b>Features:</b>
+ * <ul>
+ * <li>Content to be signed can be provided as string, byte array, file or as input stream</li>
+ * <li>Supported ssh key types: DSA, RSA, Ed25519</li>
+ * <li>Supported hashing algorithms: SHA-256 and SHA-512 (default SHA.512)</li>
+ * <li>Pluggable signing backend (default JCA)</li>
+ * </ul>
+ * <p>
+ * <b>Usage:</b>
+ * 
+ * <pre>
+ * KeyPairGenerator tKeyPairGenerator = KeyPairGenerator.getInstance("RSA");
+ * KeyPair tKeyPair = tKeyPairGenerator.generateKeyPair();
+ * SshSignatureGenerator.create().generateSignature(tKeyPair, "namespace", "a message");
+ * </pre>
  * 
  * @author profhenry
- * @param <K> sdsds
+ * @param <K> the type for the key information
  */
 public final class SshSignatureGenerator<K> {
 
@@ -250,7 +266,7 @@ public final class SshSignatureGenerator<K> {
 		tBuffer.appendInt(SIG_VERSION);
 
 		// public key
-		tBuffer.appendByteArray(publicKeyEncoder.encodePublicKey(tSigningResult.getPublicKey()));
+		tBuffer.appendByteArray(publicKeyEncoder.encodePublicKey(signingBackend.extractPublicKey(aKey)));
 		// namespace
 		tBuffer.appendString(aNamespace);
 		// reserved
@@ -294,6 +310,21 @@ public final class SshSignatureGenerator<K> {
 
 	// =================================================================================================================
 
+	/**
+	 * Factory method for creating a SSH signature generator.
+	 * <p>
+	 * The created generator uses the following default configuration
+	 * <ul>
+	 * <li>JCA signing backend</li>
+	 * <li>default SSH public key encoder</li>
+	 * <li>SHA_512 for hashing messages</li>
+	 * <li>8k buffer size when reading messages from an input stream</li>
+	 * </ul>
+	 * <p>
+	 * The with... Methodes can be used for altering the default config.
+	 * 
+	 * @return the SSH signature generator
+	 */
 	public static SshSignatureGenerator<KeyPair> create() {
 		return new SshSignatureGenerator<>(new JcaSingingBackend(),
 				new SshPublicKeyEncoder(),

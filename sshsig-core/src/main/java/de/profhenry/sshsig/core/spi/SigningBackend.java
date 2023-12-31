@@ -21,23 +21,40 @@ import de.profhenry.sshsig.core.SignatureAlgorithm;
 import de.profhenry.sshsig.core.SshSignatureException;
 
 /**
+ * SPI for signing backends.
+ * <p>
+ * The singing backend is responsible for the actual signing. The signing can be done by this class itself or might be
+ * delegated to some external process (like when using an SSH agent). Depending on this the passed key information might
+ * look different. In the first case the key information must contain the private key in the second case the public key
+ * (or even just some kind of identifier) might be sufficient.
+ * <p>
+ * 
  * @author profhenry
- * @param <K> the type for
+ * @param <K> the type for the key information
  */
 public interface SigningBackend<K> {
 
-	static class SigningResult {
+	/**
+	 * Data container for a signing result.
+	 * <p>
+	 * 
+	 * @author profhenry
+	 */
+	class SigningResult {
 
+		/**
+		 * The used signature algorithm.
+		 */
 		private SignatureAlgorithm signatureAlgorithm;
 
+		/**
+		 * The signed content.
+		 */
 		private byte[] signedContent;
 
-		private PublicKey publicKey;
-
-		public SigningResult(SignatureAlgorithm aSignatureAlgorithm, byte[] aSignedContent, PublicKey aPublicKey) {
+		public SigningResult(SignatureAlgorithm aSignatureAlgorithm, byte[] someSignedContent) {
 			signatureAlgorithm = aSignatureAlgorithm;
-			signedContent = aSignedContent;
-			publicKey = aPublicKey;
+			signedContent = someSignedContent;
 		}
 
 		public SignatureAlgorithm getSignatureAlgorithm() {
@@ -47,12 +64,27 @@ public interface SigningBackend<K> {
 		public byte[] getSignedContent() {
 			return signedContent;
 		}
-
-		public PublicKey getPublicKey() {
-			return publicKey;
-		}
-
 	}
 
-	SigningResult signData(K aKey, byte[] someDataToSign) throws SshSignatureException;
+	/**
+	 * Method for extracting the public key from the key information.
+	 * <p>
+	 * This is required because the public key gets encoded in the SSH signature.
+	 * <p>
+	 * 
+	 * @param someKeyInformation the key information
+	 * @return the public key
+	 */
+	PublicKey extractPublicKey(K someKeyInformation);
+
+	/**
+	 * Method for signing data using the provided key information.
+	 * <p>
+	 * 
+	 * @param someKeyInformation the key information
+	 * @param someDataToSign the blob to be signed
+	 * @return the signing result
+	 * @throws SshSignatureException in case the signing failed
+	 */
+	SigningResult signData(K someKeyInformation, byte[] someDataToSign) throws SshSignatureException;
 }

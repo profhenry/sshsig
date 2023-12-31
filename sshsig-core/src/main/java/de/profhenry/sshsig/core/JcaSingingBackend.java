@@ -46,6 +46,11 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JcaSingingBackend.class);
 
 	@Override
+	public PublicKey extractPublicKey(KeyPair aKeyPair) {
+		return aKeyPair.getPublic();
+	}
+
+	@Override
 	public SigningResult signData(KeyPair aKeyPair, byte[] someDataToSign) throws SshSignatureException {
 		PrivateKey tPrivateKey = aKeyPair.getPrivate();
 		PublicKey tPublicKey = aKeyPair.getPublic();
@@ -67,14 +72,14 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		}
 
 		if ("DSA".equals(tPrivateKey.getAlgorithm())) {
-			return signDsa(tPrivateKey, tPublicKey, someDataToSign);
+			return signDsa(tPrivateKey, someDataToSign);
 		}
 		if ("RSA".equals(tPrivateKey.getAlgorithm())) {
-			return signRsa(tPrivateKey, tPublicKey, someDataToSign);
+			return signRsa(tPrivateKey, someDataToSign);
 		}
 		if ("Ed25519".equals(tPrivateKey.getAlgorithm())) {
 			// used by org.bouncycastle:bcprov in default configuration
-			return signEd25519(tPrivateKey, tPublicKey, someDataToSign);
+			return signEd25519(tPrivateKey, someDataToSign);
 		}
 		if ("EdDSA".equals(tPrivateKey.getAlgorithm())) {
 			// used by
@@ -84,7 +89,7 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 
 			// EdDSA is also used for Ed448 (at least when using JDK17)
 			// TODO i would love to prevent using Ed448 but i think this is not possible when compiling againt JDK8 :-/
-			return signEd25519(tPrivateKey, tPublicKey, someDataToSign);
+			return signEd25519(tPrivateKey, someDataToSign);
 		}
 
 		throw new SshSignatureException("Unsupported private key: "
@@ -107,8 +112,7 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		}
 	}
 
-	private SigningResult signDsa(PrivateKey aPrivateKey, PublicKey aPublicKey, byte[] someDataToSign)
-			throws SshSignatureException {
+	private SigningResult signDsa(PrivateKey aPrivateKey, byte[] someDataToSign) throws SshSignatureException {
 
 		byte[] tSignedData = sign(aPrivateKey, "SHA1WithDSA", someDataToSign);
 		// DSA signatures consists of the two integers r and s.
@@ -142,7 +146,7 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		LOGGER.debug("r+s: {}", HexUtil.bytesToHex(tRAndS));
 		LOGGER.debug("     <                  r                   ><                  s                   >");
 
-		return new SigningResult(SignatureAlgorithm.SSH_DSS, tRAndS, aPublicKey);
+		return new SigningResult(SignatureAlgorithm.SSH_DSS, tRAndS);
 	}
 
 	private void arrayCopyExact20Bytes(byte[] aSrc, int aScrOffset, byte[] aDst, int aDstOffset, int aLength) {
@@ -155,15 +159,13 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		}
 	}
 
-	private SigningResult signRsa(PrivateKey aPrivateKey, PublicKey aPublicKey, byte[] someDataToSign)
-			throws SshSignatureException {
+	private SigningResult signRsa(PrivateKey aPrivateKey, byte[] someDataToSign) throws SshSignatureException {
 
 		byte[] tSignedData = sign(aPrivateKey, "SHA512WithRSA", someDataToSign);
-		return new SigningResult(SignatureAlgorithm.RSA_SHA2_512, tSignedData, aPublicKey);
+		return new SigningResult(SignatureAlgorithm.RSA_SHA2_512, tSignedData);
 	}
 
-	private SigningResult signEd25519(PrivateKey aPrivateKey, PublicKey aPublicKey, byte[] someDataToSign)
-			throws SshSignatureException {
+	private SigningResult signEd25519(PrivateKey aPrivateKey, byte[] someDataToSign) throws SshSignatureException {
 
 		byte[] tSignedData;
 		if ("net.i2p.crypto.eddsa.EdDSAPrivateKey".equals(aPrivateKey.getClass().getName())) {
@@ -171,6 +173,6 @@ public class JcaSingingBackend implements SigningBackend<KeyPair> {
 		} else {
 			tSignedData = sign(aPrivateKey, "ED25519", someDataToSign);
 		}
-		return new SigningResult(SignatureAlgorithm.SSH_ED25519, tSignedData, aPublicKey);
+		return new SigningResult(SignatureAlgorithm.SSH_ED25519, tSignedData);
 	}
 }

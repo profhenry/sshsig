@@ -39,6 +39,11 @@ public class ApacheMinaSshAgentEngine implements SigningBackend<PublicKey> {
 	}
 
 	@Override
+	public PublicKey extractPublicKey(PublicKey aPublicKey) {
+		return aPublicKey;
+	}
+
+	@Override
 	public SigningResult signData(PublicKey aPublicKey, byte[] someDataToSign) throws SshSignatureException {
 		// 1) determine signature algorithm
 		SignatureAlgorithm tSignatureAlgorithm = determineSignatureAlgorithm(aPublicKey);
@@ -53,7 +58,7 @@ public class ApacheMinaSshAgentEngine implements SigningBackend<PublicKey> {
 			throw new SshSignatureException("", exc);
 		}
 
-		return new SigningResult(tSignatureAlgorithm, tSignedContent, aPublicKey);
+		return new SigningResult(tSignatureAlgorithm, tSignedContent);
 	}
 
 	protected SignatureAlgorithm determineSignatureAlgorithm(PublicKey aPublicKey) throws SshSignatureException {
